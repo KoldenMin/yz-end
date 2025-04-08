@@ -37,13 +37,13 @@ public class WebConfig implements WebMvcConfigurer {
     /**
      * 跨域配置
      */
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOriginPatterns("*")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowCredentials(true)
-                .allowedHeaders("*")
-                .maxAge(3600);
-    }
+//    @Override
+//    public void addCorsMappings(CorsRegistry registry) {
+//        registry.addMapping("/**")
+//                .allowedOriginPatterns("*")
+//                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+//                .allowCredentials(true)
+//                .allowedHeaders("*")
+//                .maxAge(3600);
+//    }
 }

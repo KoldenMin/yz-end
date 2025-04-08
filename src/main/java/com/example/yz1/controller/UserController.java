@@ -11,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -19,10 +20,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/user")
 public class UserController {
-    
+
     @Autowired
     private UserService userService;
-    
+
     /**
      * 用户注册
      */
@@ -31,7 +32,7 @@ public class UserController {
         boolean result = userService.register(registerDTO);
         return result ? Result.success() : Result.error("注册失败");
     }
-    
+
     /**
      * 用户登录
      */
@@ -40,7 +41,7 @@ public class UserController {
         UserInfoVO userInfo = userService.login(loginDTO);
         return Result.success(userInfo);
     }
-    
+
     /**
      * 获取当前用户信息
      */
@@ -50,7 +51,7 @@ public class UserController {
         UserInfoVO userInfo = userService.getUserInfo(userId);
         return Result.success(userInfo);
     }
-    
+
     /**
      * 获取所有用户信息（管理员功能）
      */
@@ -60,7 +61,7 @@ public class UserController {
         if (!isAdmin) {
             return Result.error(403, "无权限");
         }
-        
+
         List<User> userList = userService.listAllUsers();
         return Result.success(userList);
     }
