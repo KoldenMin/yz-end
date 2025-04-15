@@ -26,13 +26,13 @@ import java.util.UUID;
  */
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-    
+
     @Autowired
     private EducationBackgroundService educationBackgroundService;
-    
+
     @Autowired
     private JwtUtil jwtUtil;
-    
+
     /**
      * 用户注册
      *
@@ -48,36 +48,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (this.count(queryWrapper) > 0) {
             throw new RuntimeException("用户名已存在");
         }
-        
+
         // 2. 创建用户
         User user = new User();
         BeanUtil.copyProperties(registerDTO, user, "password", "educationList");
-        
+
         // 3. 处理密码，生成盐值并加密
         String salt = UUID.randomUUID().toString().replace("-", "");
         String encryptedPassword = DigestUtil.md5Hex(registerDTO.getPassword() + salt);
         user.setSalt(salt);
         user.setPassword(encryptedPassword);
-        
+
         // 4. 设置默认值
         user.setIsAdmin(0); // 默认为普通用户
         user.setStatus(1);  // 默认启用状态
         Date now = new Date();
         user.setCreateTime(now);
         user.setUpdateTime(now);
-        
+
         // 5. 保存用户
         boolean saved = this.save(user);
         if (!saved) {
             throw new RuntimeException("用户注册失败");
         }
-        
+
         // 6. 保存教育背景
         educationBackgroundService.batchAddEducation(user.getId(), registerDTO.getEducationList());
-        
+
         return true;
     }
-    
+
     /**
      * 用户登录
      *
@@ -90,38 +90,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(User::getUsername, loginDTO.getUsername());
         User user = this.getOne(queryWrapper);
-        
+
         if (user == null) {
             throw new RuntimeException("用户不存在");
         }
-        
+
         // 2. 验证密码
         String encryptedPassword = DigestUtil.md5Hex(loginDTO.getPassword() + user.getSalt());
         if (!user.getPassword().equals(encryptedPassword)) {
             throw new RuntimeException("密码错误");
         }
-        
+
         // 3. 检查用户状态
         if (user.getStatus() != 1) {
             throw new RuntimeException("账号已被禁用");
         }
-        
+
         // 4. 生成token
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getIsAdmin() == 1);
-        
+
         // 5. 获取用户教育背景
         List<EducationBackground> educationList = educationBackgroundService.listByUserId(user.getId());
-        
+
         // 6. 构建返回VO
         UserInfoVO userInfoVO = new UserInfoVO();
         BeanUtil.copyProperties(user, userInfoVO);
         userInfoVO.setIsAdmin(user.getIsAdmin() == 1);
         userInfoVO.setEducationList(educationList);
         userInfoVO.setToken(token);
-        
+
         return userInfoVO;
     }
-    
+
     /**
      * 获取用户信息
      *
@@ -135,19 +135,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             throw new RuntimeException("用户不存在");
         }
-        
+
         // 2. 获取用户教育背景
         List<EducationBackground> educationList = educationBackgroundService.listByUserId(userId);
-        
+
         // 3. 构建返回VO
         UserInfoVO userInfoVO = new UserInfoVO();
         BeanUtil.copyProperties(user, userInfoVO);
         userInfoVO.setIsAdmin(user.getIsAdmin() == 1);
         userInfoVO.setEducationList(educationList);
-        
+
         return userInfoVO;
     }
-    
+
     /**
      * 获取所有用户信息（管理员功能）
      *
