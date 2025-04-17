@@ -2,9 +2,10 @@ package com.example.yz1.config;
 
 import com.example.yz1.interceptor.AuthInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -12,10 +13,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    
+
     @Autowired
     private AuthInterceptor authInterceptor;
-    
+
+    @Value("${file.upload.path}")
+    private String uploadPath;
+
+
     /**
      * 添加拦截器
      */
@@ -25,6 +30,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")
                 .excludePathPatterns(
                         "/user/register",
+                        "/user/salt",
+                        "/avatars/**",
                         "/user/login",
                         "/error",
                         "/swagger-resources/**",
@@ -33,7 +40,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/swagger-ui.html/**"
                 );
     }
-    
+
     /**
      * 跨域配置
      */
@@ -46,4 +53,15 @@ public class WebConfig implements WebMvcConfigurer {
 //                .allowedHeaders("*")
 //                .maxAge(3600);
 //    }
+
+    /**
+     * 配置静态资源映射
+     * 将上传的头像文件目录映射到可访问的URL路径
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 将物理路径 uploads/avatars 映射到 URL路径 /avatars
+        registry.addResourceHandler("/avatars/**")
+                .addResourceLocations("file:" + uploadPath + "/");
+    }
 }

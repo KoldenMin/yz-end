@@ -3,6 +3,7 @@ package com.example.yz1.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.yz1.dto.LoginDTO;
 import com.example.yz1.dto.RegisterDTO;
+import com.example.yz1.dto.UpdateDTO;
 import com.example.yz1.entity.User;
 import com.example.yz1.vo.UserInfoVO;
 
@@ -12,7 +13,7 @@ import java.util.List;
  * 用户服务接口
  */
 public interface UserService extends IService<User> {
-    
+
     /**
      * 用户注册
      *
@@ -20,7 +21,7 @@ public interface UserService extends IService<User> {
      * @return 注册结果
      */
     boolean register(RegisterDTO registerDTO);
-    
+
     /**
      * 用户登录
      *
@@ -28,7 +29,7 @@ public interface UserService extends IService<User> {
      * @return 用户信息
      */
     UserInfoVO login(LoginDTO loginDTO);
-    
+
     /**
      * 获取用户信息
      *
@@ -36,11 +37,20 @@ public interface UserService extends IService<User> {
      * @return 用户信息
      */
     UserInfoVO getUserInfo(Long userId);
-    
+
     /**
      * 获取所有用户信息（管理员功能）
      *
      * @return 用户列表
      */
     List<User> listAllUsers();
+
+    Boolean logout(Long userId);
+
+    Boolean deleteById(Integer id);
+
+
+    Boolean updateUser(Long id, UpdateDTO updateDTO);
+
+    Boolean setAsAdmin(Integer id);
 }

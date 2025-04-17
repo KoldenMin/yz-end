@@ -29,3 +29,12 @@ mybatis-plus:
 jwt:
   secret: TLgWVGpiE2TeWBYQBfN2A7qYyoyRRGdL
   expiration: 86400000
+
+# 自定义文件上传配置
+file:
+  upload:
+    path: D:/pic/upload/avatars # 头像文件上传的物理路径，根据实际环境调整
+    avatar:
+      max-size: 20MB  # 头像大小限制为20MB
+  access:
+    path: /avatars  # 访问头像的URL路径前缀

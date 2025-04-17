@@ -70,9 +70,9 @@ public class JwtUtil {
      *
      * @param userId 用户ID
      */
-    public void invalidateToken(Long userId) {
+    public Boolean invalidateToken(Long userId) {
         String redisKey = TOKEN_KEY_PREFIX + userId;
-        redisUtil.delete(redisKey);
+        return redisUtil.delete(redisKey);
     }
 
     /**

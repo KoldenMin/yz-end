@@ -1,11 +1,13 @@
 package com.example.yz1.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.yz1.dto.LoginDTO;
 import com.example.yz1.dto.RegisterDTO;
+import com.example.yz1.dto.UpdateDTO;
 import com.example.yz1.entity.EducationBackground;
 import com.example.yz1.entity.User;
 import com.example.yz1.mapper.UserMapper;
@@ -96,8 +98,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         // 2. 验证密码
-        String encryptedPassword = DigestUtil.md5Hex(loginDTO.getPassword() + user.getSalt());
-        if (!user.getPassword().equals(encryptedPassword)) {
+
+        // 原来后端加密，现在改为前端加密了
+//        String encryptedPassword = DigestUtil.md5Hex(loginDTO.getPassword() + user.getSalt());
+        if (!user.getPassword().equals(loginDTO.getPassword())) {
             throw new RuntimeException("密码错误");
         }
 
@@ -144,7 +148,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         BeanUtil.copyProperties(user, userInfoVO);
         userInfoVO.setIsAdmin(user.getIsAdmin() == 1);
         userInfoVO.setEducationList(educationList);
-
         return userInfoVO;
     }
 
@@ -156,5 +159,52 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public List<User> listAllUsers() {
         return this.list();
+    }
+
+
+    @Override
+    @Transactional
+    public Boolean deleteById(Integer id) {
+        LambdaQueryWrapper<EducationBackground> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(EducationBackground::getUserId, id);
+        educationBackgroundService.remove(queryWrapper);
+        return removeById(id);
+    }
+
+    @Override
+    public Boolean updateUser(Long id, UpdateDTO updateDTO) {
+        // 先查询原有用户信息
+        User existingUser = getById(id);
+        if (existingUser == null) {
+            return false;
+        }
+//        User user = new User();
+//        user.setId(id);
+        if (StrUtil.isNotEmpty(updateDTO.getPassword())) {
+            // 3. 处理密码，生成盐值并加密
+            String salt = UUID.randomUUID().toString().replace("-", "");
+            String encryptedPassword = DigestUtil.md5Hex(updateDTO.getPassword() + salt);
+            existingUser.setSalt(salt);
+            existingUser.setPassword(encryptedPassword);
+        }
+        if (StrUtil.isNotEmpty(updateDTO.getRealName())) {
+            existingUser.setRealName(updateDTO.getRealName());
+        }
+        if (StrUtil.isNotEmpty(updateDTO.getPhone())) {
+            existingUser.setPhone(updateDTO.getPhone());
+        }
+        return updateById(existingUser);
+    }
+
+    @Override
+    public Boolean setAsAdmin(Integer id) {
+        return lambdaUpdate().eq(User::getId, id)
+                .set(User::getIsAdmin, 1)
+                .update();
+    }
+
+    @Override
+    public Boolean logout(Long userId) {
+        return jwtUtil.invalidateToken(userId);
     }
 }
