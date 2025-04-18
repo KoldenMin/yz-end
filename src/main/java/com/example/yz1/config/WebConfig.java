@@ -20,6 +20,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${file.upload.path}")
     private String uploadPath;
 
+    @Value("${file.upload.resume.path}")
+    private String resumePath;
+
 
     /**
      * 添加拦截器
@@ -32,6 +35,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/user/register",
                         "/user/salt",
                         "/avatars/**",
+                        "/resumes/**",
                         "/user/login",
                         "/error",
                         "/swagger-resources/**",
@@ -63,5 +67,7 @@ public class WebConfig implements WebMvcConfigurer {
         // 将物理路径 uploads/avatars 映射到 URL路径 /avatars
         registry.addResourceHandler("/avatars/**")
                 .addResourceLocations("file:" + uploadPath + "/");
+        registry.addResourceHandler("/resumes/**")
+                .addResourceLocations("file:" + resumePath + "/");
     }
 }

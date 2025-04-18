@@ -2,7 +2,6 @@ package com.example.yz1.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.yz1.common.Result;
@@ -37,6 +36,8 @@ public class UserController {
     private UserService userService;
     @Value("${file.upload.path:uploads/avatars}")
     private String uploadPath;
+    @Value("${file.upload.resume.path:uploads/resumes}")
+    private String resumeUploadPath;
 
     /**
      * 用户注册
@@ -134,7 +135,7 @@ public class UserController {
         if (success) {
             return Result.success();
         } else {
-            return Result.error("删除失败");
+            return Result.error("更新失败");
         }
     }
 
@@ -166,7 +167,7 @@ public class UserController {
      */
     @PostMapping("/update-avatar")
     public Result<?> updateAvatar(@RequestParam("avatar") MultipartFile file,
-                                  @RequestParam("userId") Long userId, HttpServletRequest request) {
+                                  @RequestParam("userId") Long userId) {
         // 检查文件是否为空
         if (file.isEmpty()) {
             return Result.error("上传文件不能为空");
@@ -208,6 +209,67 @@ public class UserController {
             // 返回头像URL
             Map<String, String> result = new HashMap<>();
             result.put("avatarUrl", avatarUrl);
+
+            return Result.success(result);
+
+        } catch (IOException e) {
+            return Result.error("文件上传失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 上传简历
+     *
+     * @param file   简历文件
+     * @param userId 用户ID
+     * @return 结果
+     */
+    @PostMapping("/upload-resume")
+    public Result<?> uploadResume(@RequestParam("resume") MultipartFile file,
+                                  @RequestParam("userId") Long userId) {
+        // 检查文件是否为空
+        if (file.isEmpty()) {
+            return Result.error("上传文件不能为空");
+        }
+
+        try {
+            // 确保上传目录存在
+            File uploadDir = new File(resumeUploadPath);
+            if (!uploadDir.exists()) {
+                uploadDir.mkdirs();
+            }
+
+            // 获取原始文件名和扩展名
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null) {
+                return Result.error("文件名无效");
+            }
+
+            // 验证文件类型
+            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+            if (!".pdf".equals(fileExtension) && !".doc".equals(fileExtension) && !".docx".equals(fileExtension)) {
+                return Result.error("仅支持PDF、DOC或DOCX格式的简历");
+            }
+
+            // 生成唯一文件名
+            String newFilename = "resume_" + userId + "_" + UUID.randomUUID().toString().substring(0, 8) + fileExtension;
+
+            // 保存文件
+            File destFile = new File(uploadDir.getAbsolutePath() + File.separator + newFilename);
+            file.transferTo(destFile);
+
+            // 生成访问URL
+            String resumeUrl = "/resumes/" + newFilename;
+
+            // 更新用户表中的简历字段
+            userService.lambdaUpdate()
+                    .eq(User::getId, userId)
+                    .set(User::getResumeUrl, resumeUrl)
+                    .update();
+
+            // 返回简历URL
+            Map<String, String> result = new HashMap<>();
+            result.put("resumeUrl", resumeUrl);
 
             return Result.success(result);
 

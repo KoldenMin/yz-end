@@ -143,11 +143,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 2. 获取用户教育背景
         List<EducationBackground> educationList = educationBackgroundService.listByUserId(userId);
 
+        // 获取token信息
+        String token = jwtUtil.getTokenFromRedis(userId);
+
         // 3. 构建返回VO
         UserInfoVO userInfoVO = new UserInfoVO();
         BeanUtil.copyProperties(user, userInfoVO);
         userInfoVO.setIsAdmin(user.getIsAdmin() == 1);
         userInfoVO.setEducationList(educationList);
+        userInfoVO.setToken(token);
         return userInfoVO;
     }
 
