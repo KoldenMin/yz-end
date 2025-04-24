@@ -3,7 +3,7 @@ package com.example.yz1.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.yz1.dto.LoginDTO;
 import com.example.yz1.dto.RegisterDTO;
-import com.example.yz1.dto.UpdateDTO;
+import com.example.yz1.dto.UserUpdateDTO;
 import com.example.yz1.entity.User;
 import com.example.yz1.vo.UserInfoVO;
 
@@ -50,7 +50,7 @@ public interface UserService extends IService<User> {
     Boolean deleteById(Integer id);
 
 
-    Boolean updateUser(Long id, UpdateDTO updateDTO);
+    Boolean updateUser(Long id, UserUpdateDTO userUpdateDTO);
 
     Boolean setAsAdmin(Integer id);
 }

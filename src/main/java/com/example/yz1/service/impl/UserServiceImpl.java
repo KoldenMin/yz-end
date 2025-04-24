@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.yz1.dto.LoginDTO;
 import com.example.yz1.dto.RegisterDTO;
-import com.example.yz1.dto.UpdateDTO;
+import com.example.yz1.dto.UserUpdateDTO;
 import com.example.yz1.entity.EducationBackground;
 import com.example.yz1.entity.User;
 import com.example.yz1.mapper.UserMapper;
@@ -176,7 +176,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public Boolean updateUser(Long id, UpdateDTO updateDTO) {
+    public Boolean updateUser(Long id, UserUpdateDTO userUpdateDTO) {
         // 先查询原有用户信息
         User existingUser = getById(id);
         if (existingUser == null) {
@@ -184,18 +184,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 //        User user = new User();
 //        user.setId(id);
-        if (StrUtil.isNotEmpty(updateDTO.getPassword())) {
+        if (StrUtil.isNotEmpty(userUpdateDTO.getPassword())) {
             // 3. 处理密码，生成盐值并加密
             String salt = UUID.randomUUID().toString().replace("-", "");
-            String encryptedPassword = DigestUtil.md5Hex(updateDTO.getPassword() + salt);
+            String encryptedPassword = DigestUtil.md5Hex(userUpdateDTO.getPassword() + salt);
             existingUser.setSalt(salt);
             existingUser.setPassword(encryptedPassword);
         }
-        if (StrUtil.isNotEmpty(updateDTO.getRealName())) {
-            existingUser.setRealName(updateDTO.getRealName());
+        if (StrUtil.isNotEmpty(userUpdateDTO.getRealName())) {
+            existingUser.setRealName(userUpdateDTO.getRealName());
         }
-        if (StrUtil.isNotEmpty(updateDTO.getPhone())) {
-            existingUser.setPhone(updateDTO.getPhone());
+        if (StrUtil.isNotEmpty(userUpdateDTO.getPhone())) {
+            existingUser.setPhone(userUpdateDTO.getPhone());
         }
         return updateById(existingUser);
     }

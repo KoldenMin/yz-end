@@ -7,8 +7,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.yz1.common.Result;
 import com.example.yz1.dto.LoginDTO;
 import com.example.yz1.dto.RegisterDTO;
-import com.example.yz1.dto.UpdateDTO;
+import com.example.yz1.dto.UserUpdateDTO;
 import com.example.yz1.entity.User;
+import com.example.yz1.global.GlobalUpload;
 import com.example.yz1.service.UserService;
 import com.example.yz1.vo.UserInfoVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +19,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * 用户控制器
@@ -31,6 +30,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/user")
 public class UserController {
+
+    @Autowired
+    private GlobalUpload globalUpload;
 
     @Autowired
     private UserService userService;
@@ -130,8 +132,8 @@ public class UserController {
     }
 
     @PutMapping("/update/{id}")
-    public Result<Void> update(@PathVariable Long id, @RequestBody UpdateDTO updateDTO) {
-        Boolean success = userService.updateUser(id, updateDTO);
+    public Result<Void> update(@PathVariable Long id, @RequestBody UserUpdateDTO userUpdateDTO) {
+        Boolean success = userService.updateUser(id, userUpdateDTO);
         if (success) {
             return Result.success();
         } else {
@@ -168,53 +170,63 @@ public class UserController {
     @PostMapping("/update-avatar")
     public Result<?> updateAvatar(@RequestParam("avatar") MultipartFile file,
                                   @RequestParam("userId") Long userId) {
-        // 检查文件是否为空
-        if (file.isEmpty()) {
-            return Result.error("上传文件不能为空");
-        }
 
         try {
-            // 确保上传目录存在
-            File uploadDir = new File(uploadPath);
-            if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
+            if (file.isEmpty()) {
+                return Result.error("头像不能为空");
             }
-
-            // 生成唯一文件名
-            String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename != null ?
-                    originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
-            String newFilename = "avatar_" + userId + "_" + UUID.randomUUID().toString().substring(0, 8) + fileExtension;
-
-            // 保存文件
-            File destFile = new File(uploadDir.getAbsolutePath() + File.separator + newFilename);
-            file.transferTo(destFile);
-
-            // 生成访问URL
-            String avatarUrl = "/avatars/" + newFilename;
-            // 在 UserController 中修改
-//            String avatarUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/api/avatars/" + newFilename;
-
-            // 更新用户表中的头像字段
-//            UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
-//            updateWrapper.eq("id", userId);
-//            updateWrapper.set("avatar", avatarUrl);
-//            userService.update(updateWrapper);
-
+            String avatarUrl = globalUpload.uploadAvatar(userId, file, "avatar");
             userService.lambdaUpdate()
                     .eq(User::getId, userId)
                     .set(User::getAvatar, avatarUrl)
                     .update();
 
-            // 返回头像URL
             Map<String, String> result = new HashMap<>();
             result.put("avatarUrl", avatarUrl);
-
             return Result.success(result);
-
         } catch (IOException e) {
-            return Result.error("文件上传失败: " + e.getMessage());
+            return Result.error("头像上传失败" + e.getMessage());
         }
+
+//        // 检查文件是否为空
+//        if (file.isEmpty()) {
+//            return Result.error("上传文件不能为空");
+//        }
+//
+//        try {
+//            // 确保上传目录存在
+//            File uploadDir = new File(uploadPath);
+//            if (!uploadDir.exists()) {
+//                uploadDir.mkdirs();
+//            }
+//
+//            // 生成唯一文件名
+//            String originalFilename = file.getOriginalFilename();
+//            String fileExtension = originalFilename != null ?
+//                    originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
+//            String newFilename = "avatar_" + userId + "_" + UUID.randomUUID().toString().substring(0, 8) + fileExtension;
+//
+//            // 保存文件
+//            File destFile = new File(uploadDir.getAbsolutePath() + File.separator + newFilename);
+//            file.transferTo(destFile);
+//
+//            // 生成访问URL
+//            String avatarUrl = "/avatars/" + newFilename;
+//
+//            userService.lambdaUpdate()
+//                    .eq(User::getId, userId)
+//                    .set(User::getAvatar, avatarUrl)
+//                    .update();
+//
+//            // 返回头像URL
+//            Map<String, String> result = new HashMap<>();
+//            result.put("avatarUrl", avatarUrl);
+//
+//            return Result.success(result);
+//
+//        } catch (IOException e) {
+//            return Result.error("文件上传失败: " + e.getMessage());
+//        }
     }
 
     /**
@@ -227,54 +239,75 @@ public class UserController {
     @PostMapping("/upload-resume")
     public Result<?> uploadResume(@RequestParam("resume") MultipartFile file,
                                   @RequestParam("userId") Long userId) {
-        // 检查文件是否为空
-        if (file.isEmpty()) {
-            return Result.error("上传文件不能为空");
-        }
 
         try {
-            // 确保上传目录存在
-            File uploadDir = new File(resumeUploadPath);
-            if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
-            }
+            String resumeUrl = globalUpload.uploadResume(userId, file, "resume", new String[]{".pdf", ".doc", ".docx"});
 
-            // 获取原始文件名和扩展名
-            String originalFilename = file.getOriginalFilename();
-            if (originalFilename == null) {
-                return Result.error("文件名无效");
-            }
-
-            // 验证文件类型
-            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
-            if (!".pdf".equals(fileExtension) && !".doc".equals(fileExtension) && !".docx".equals(fileExtension)) {
-                return Result.error("仅支持PDF、DOC或DOCX格式的简历");
-            }
-
-            // 生成唯一文件名
-            String newFilename = "resume_" + userId + "_" + UUID.randomUUID().toString().substring(0, 8) + fileExtension;
-
-            // 保存文件
-            File destFile = new File(uploadDir.getAbsolutePath() + File.separator + newFilename);
-            file.transferTo(destFile);
-
-            // 生成访问URL
-            String resumeUrl = "/resumes/" + newFilename;
-
-            // 更新用户表中的简历字段
             userService.lambdaUpdate()
                     .eq(User::getId, userId)
                     .set(User::getResumeUrl, resumeUrl)
                     .update();
 
-            // 返回简历URL
+            // 返回结果
             Map<String, String> result = new HashMap<>();
             result.put("resumeUrl", resumeUrl);
-
             return Result.success(result);
-
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
         } catch (IOException e) {
-            return Result.error("文件上传失败: " + e.getMessage());
+            return Result.error("简历上传失败" + e.getMessage());
         }
+
+//        // 检查文件是否为空
+//        if (file.isEmpty()) {
+//            return Result.error("上传文件不能为空");
+//        }
+//
+//        try {
+//            // 确保上传目录存在
+//            File uploadDir = new File(resumeUploadPath);
+//            if (!uploadDir.exists()) {
+//                uploadDir.mkdirs();
+//            }
+//
+//            // 获取原始文件名和扩展名
+//            String originalFilename = file.getOriginalFilename();
+//            if (originalFilename == null) {
+//                return Result.error("文件名无效");
+//            }
+//
+//            // 验证文件类型
+//            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+//            if (!".pdf".equals(fileExtension) && !".doc".equals(fileExtension) && !".docx".equals(fileExtension)) {
+//                return Result.error("仅支持PDF、DOC或DOCX格式的简历");
+//            }
+//
+//            // 生成唯一文件名
+//            String newFilename = "resume_" + userId + "_" + UUID.randomUUID().toString().substring(0, 8) + fileExtension;
+//
+//            // 保存文件
+//            File destFile = new File(uploadDir.getAbsolutePath() + File.separator + newFilename);
+//            file.transferTo(destFile);
+//
+//            // 生成访问URL
+//            String resumeUrl = "/resumes/" + newFilename;
+//
+//            // 更新用户表中的简历字段
+//            userService.lambdaUpdate()
+//                    .eq(User::getId, userId)
+//                    .set(User::getResumeUrl, resumeUrl)
+//                    .update();
+//
+//            // 返回简历URL
+//            Map<String, String> result = new HashMap<>();
+//            result.put("resumeUrl", resumeUrl);
+//
+//            return Result.success(result);
+//
+//        } catch (IOException e) {
+//            return Result.error("文件上传失败: " + e.getMessage());
+//        }
     }
+
+
 }

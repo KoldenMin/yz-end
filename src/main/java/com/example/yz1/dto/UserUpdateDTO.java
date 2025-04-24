@@ -3,11 +3,10 @@ package com.example.yz1.dto;
 import lombok.Data;
 
 import javax.validation.constraints.*;
-import java.util.Date;
 import java.util.List;
 
 @Data
-public class UpdateDTO {
+public class UserUpdateDTO {
     /**
      * 用户名
      */
