@@ -82,6 +82,18 @@ public class EmployeeController {
     }
 
     /*
+       根据user_id获取员工
+     */
+    @GetMapping("/info/user/{userId}")
+    public Result<EmployeeVO> getEmployeeByUserId(@PathVariable("userId") Integer userId) {
+        Employee employee = employeeService.lambdaQuery()
+                .eq(Employee::getUserId, userId)
+                .one();
+        EmployeeVO employeeVO = BeanUtil.copyProperties(employee, EmployeeVO.class);
+        return Result.success(employeeVO);
+    }
+
+    /*
        分页查询员工
      */
     @GetMapping("/page")

@@ -10,6 +10,7 @@ import com.example.yz1.entity.Department;
 import com.example.yz1.entity.Employee;
 import com.example.yz1.entity.RegistrationApproval;
 import com.example.yz1.mapper.RegistrationApprovalMapper;
+import com.example.yz1.service.IDepartmentService;
 import com.example.yz1.service.IRegistrationApprovalService;
 import com.example.yz1.vo.RegistrationApprovalVO;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -36,6 +37,7 @@ import java.util.Map;
 public class RegistrationApprovalController {
 
     private final IRegistrationApprovalService registrationApprovalService;
+    private final IDepartmentService departmentService;
     private final RegistrationApprovalMapper registrationApprovalMapper;
 
     /*
@@ -149,6 +151,12 @@ public class RegistrationApprovalController {
         statistics.put("审核拒绝数量", rejectedCount);
 
         return Result.success(statistics);
+    }
+
+    @GetMapping("/getAllDepartment")
+    public Result<List<Department>> getAllDepartment() {
+        List<Department> list = departmentService.list();
+        return Result.success(list);
     }
 
 }
