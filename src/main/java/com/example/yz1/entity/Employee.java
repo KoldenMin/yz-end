@@ -90,7 +90,7 @@ public class Employee implements Serializable {
     /**
      * 角色，员工为0，admin为1，经理为2
      */
-    private Boolean role;
+    private Integer role;
 
     /**
      * 创建时间

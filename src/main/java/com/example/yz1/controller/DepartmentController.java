@@ -8,9 +8,12 @@ import com.example.yz1.common.Result;
 import com.example.yz1.dto.DepartmentUpdateDTO;
 import com.example.yz1.entity.Department;
 import com.example.yz1.entity.Employee;
+import com.example.yz1.mapper.DepartmentMapper;
 import com.example.yz1.service.IDepartmentService;
 import com.example.yz1.service.IEmployeeDepartmentService;
 import com.example.yz1.service.IEmployeeService;
+import com.example.yz1.vo.DepartmentVO;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +34,7 @@ public class DepartmentController {
 
     private final IDepartmentService departmentService;
     private final IEmployeeService employeeService;
+    private final DepartmentMapper departmentMapper;
     private final IEmployeeDepartmentService employeeDepartmentService;
 
     /**
@@ -110,15 +114,27 @@ public class DepartmentController {
      * 分页
      */
     @GetMapping("/page")
-    public Result<IPage<Department>> getDepartmentPage(@RequestParam(defaultValue = "1") Integer pageNum,
-                                                       @RequestParam(defaultValue = "5") Integer pageSize,
-                                                       @RequestParam(required = false) String name,
-                                                       @RequestParam(required = false) String depaFunction) {
-        Page<Department> page = new Page<>(pageNum, pageSize);
-        Page<Department> departmentPage = departmentService.lambdaQuery()
-                .like(StrUtil.isNotEmpty(name), Department::getName, name)
-                .like(StrUtil.isNotEmpty(depaFunction), Department::getDepaFunction, depaFunction).page(page);
-        return Result.success(departmentPage);
+    public Result<IPage<DepartmentVO>> getDepartmentPage(@RequestParam(defaultValue = "1") Integer pageNum,
+                                                         @RequestParam(defaultValue = "5") Integer pageSize,
+                                                         @RequestParam(required = false) String name,
+                                                         @RequestParam(required = false) String depaFunction) {
+        MPJLambdaWrapper<Department> wrapper = new MPJLambdaWrapper<Department>()
+                .select(Department::getId, Department::getName, Department::getDepaFunction,
+                        Department::getEmployeeCount, Department::getWorkingDate, Department::getWorkingHours,
+                        Department::getCreateTime)
+                .selectAs(Employee::getName, "managerName")
+                .leftJoin(Employee.class, Employee::getId, Department::getManagerId);
+
+        // 关闭副表逻辑查询
+        wrapper.disableSubLogicDel();
+
+        Page<DepartmentVO> page = new Page<>(pageNum, pageSize);
+
+        wrapper.like(StrUtil.isNotEmpty(name), Department::getName, name)
+                .like(StrUtil.isNotEmpty(depaFunction), Department::getDepaFunction, depaFunction);
+        Page<DepartmentVO> departmentVOPage = departmentMapper.selectJoinPage(page, DepartmentVO.class, wrapper);
+
+        return Result.success(departmentVOPage);
 
     }
 

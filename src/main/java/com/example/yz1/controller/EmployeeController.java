@@ -6,19 +6,21 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.yz1.common.Result;
+import com.example.yz1.entity.Department;
 import com.example.yz1.entity.Employee;
 import com.example.yz1.global.GlobalUpload;
+import com.example.yz1.service.IDepartmentService;
 import com.example.yz1.service.IEmployeeService;
 import com.example.yz1.vo.EmployeeVO;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -35,22 +37,31 @@ public class EmployeeController {
 
     private final GlobalUpload globalUpload;
     private final IEmployeeService employeeService;
-    private final ApplicationEventPublisher applicationEventPublisher;
-    @Value("${file.upload.path:uploads/avatars}")
-    private String uploadPath;
-    @Value("${file.upload.resume.path:uploads/resumes}")
-    private String resumeUploadPath;
+    private final IDepartmentService departmentService;
 
 
     /*
-       获取所有员工
+       修改员工角色
      */
-//    @GetMapping("/list")
-//    public Result<List<EmployeeVO>> listAllEmployees() {
-//        List<Employee> employeeList = employeeService.list();
-//        List<EmployeeVO> employeeVOS = BeanUtil.copyToList(employeeList, EmployeeVO.class);
-//        return Result.success(employeeVOS);
-//    }
+    @PostMapping("/updateRole")
+    public Result<Void> updateRole() {
+        List<Department> departmentList = departmentService.lambdaQuery().list();
+        List<Long> managerIds = departmentList.stream()
+                .map(Department::getManagerId)
+                .filter(managerId -> managerId != null)
+                .distinct()
+                .collect(Collectors.toList());
+        boolean success = employeeService.lambdaUpdate()
+                .set(Employee::getRole, 2)
+                .in(Employee::getId, managerIds)
+                .update();
+
+        if (success) {
+            return Result.success();
+        } else {
+            return Result.error("更新角色失败");
+        }
+    }
 
     /*
        新增或修改员工
@@ -58,12 +69,6 @@ public class EmployeeController {
     @PostMapping("/addOrUpdate")
     public Result<Void> addOrUpdateEmployee(@RequestBody Employee employee) {
         boolean success = employeeService.saveOrUpdate(employee);
-//        try {
-//            EmployeeEvent event = new EmployeeEvent(this);
-//            applicationEventPublisher.publishEvent(event);
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
         if (success) {
             return Result.success();
         } else {
@@ -114,12 +119,6 @@ public class EmployeeController {
     @DeleteMapping("/delete/{id}")
     public Result<Void> delEmployeeById(@PathVariable("id") Integer id) {
         boolean success = employeeService.removeById(id);
-//        try {
-//            EmployeeEvent event = new EmployeeEvent(this);
-//            applicationEventPublisher.publishEvent(event);
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
         if (success) {
             return Result.success();
         } else {
