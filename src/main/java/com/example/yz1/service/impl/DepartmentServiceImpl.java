@@ -30,10 +30,13 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
     private final EmployeeDepartmentMapper employeeDepartmentMapper;
 
     @Override
-    public Boolean updateDepartment(Long id, DepartmentUpdateDTO departmentUpdateDTO) {
+    public Boolean updateDepartment(Long id, DepartmentUpdateDTO departmentUpdateDTO, Long employeeId) {
         Department selectDepartment = getById(id);
         if (selectDepartment == null) {
             return false;
+        }
+        if (StrUtil.isNotEmpty(departmentUpdateDTO.getName())) {
+            selectDepartment.setName(departmentUpdateDTO.getName());
         }
         if (StrUtil.isNotEmpty(departmentUpdateDTO.getDepaFunction())) {
             selectDepartment.setDepaFunction(departmentUpdateDTO.getDepaFunction());
@@ -44,8 +47,8 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         if (StrUtil.isNotEmpty(departmentUpdateDTO.getWorkingHours())) {
             selectDepartment.setWorkingHours(departmentUpdateDTO.getWorkingHours());
         }
-        if (departmentUpdateDTO.getManagerId() != null) {
-            selectDepartment.setManagerId(departmentUpdateDTO.getManagerId());
+        if (StrUtil.isNotEmpty(departmentUpdateDTO.getManagerName())) {
+            selectDepartment.setManagerId(employeeId);
         }
         return updateById(selectDepartment);
     }

@@ -1,6 +1,7 @@
 package com.example.yz1.controller;
 
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -55,12 +56,35 @@ public class DepartmentController {
      */
     @PutMapping("/update/{id}")
     public Result<Void> updateDepartment(@PathVariable Long id, @RequestBody DepartmentUpdateDTO departmentUpdateDTO) {
-        Boolean success = departmentService.updateDepartment(id, departmentUpdateDTO);
-        if (success) {
-            return Result.success();
+        String managerName = departmentUpdateDTO.getManagerName();
+        if (StrUtil.isNotEmpty(managerName)) {
+            // 部门经理不为空
+            Employee employee = employeeService.lambdaQuery()
+                    .eq(Employee::getName, managerName)
+                    .one();
+            Long employeeId = employee.getId();
+            Boolean success = departmentService.updateDepartment(id, departmentUpdateDTO, employeeId);
+            if (success) {
+                // 还要修改employee表的员工状态
+                // todo 这里改部门表的管理员的时候还要重新设置employee表的role字段，不是部门经理了还要把role变成0
+                employeeService.lambdaUpdate()
+                        .eq(Employee::getId, employeeId)
+                        .set(Employee::getRole, 2)
+                        .update();
+                return Result.success();
+            } else {
+                return Result.error("更新部门失败");
+            }
         } else {
-            return Result.error("更新部门失败");
+            Boolean success = departmentService.updateDepartment(id, departmentUpdateDTO, null);
+            if (success) {
+                return Result.success();
+            } else {
+                return Result.error("更新部门失败");
+            }
         }
+
+
     }
 
     /**
@@ -80,12 +104,23 @@ public class DepartmentController {
      * 根据id查看部门信息
      */
     @GetMapping("/info/{id}")
-    public Result<Department> getDepartmentInfo(@PathVariable Long id) {
+    public Result<DepartmentVO> getDepartmentInfo(@PathVariable Long id) {
         Department department = departmentService.getById(id);
         if (department == null) {
             return Result.error("查不到部门信息");
         }
-        return Result.success(department);
+        Long employeeId = department.getManagerId();
+        DepartmentVO departmentVO = BeanUtil.copyProperties(department, DepartmentVO.class);
+        if (employeeId == null) {
+            // 部门经理为空，直接返回
+            return Result.success(departmentVO);
+        }
+        // 不为空设置部门经理姓名
+        Employee employee = employeeService.getById(employeeId);
+        String employeeName = employee.getName();
+        departmentVO.setManagerName(employeeName);
+
+        return Result.success(departmentVO);
     }
 
     /**
@@ -145,6 +180,14 @@ public class DepartmentController {
     public Result<List<Employee>> getEmployeeList(@PathVariable Long departmentId) {
         List<Employee> employeeList = employeeService.lambdaQuery().eq(Employee::getDepartmentId, departmentId).list();
         return Result.success(employeeList);
+    }
+
+    /**
+     * 设置部门经理
+     */
+    @PostMapping("/setManager")
+    public Result<?> setManager() {
+        return null;
     }
 
 

@@ -18,6 +18,11 @@ public class DepartmentUpdateDTO {
      */
     private String depaFunction;
 
+    /**
+     * 部门名称
+     */
+    private String name;
+
 
     /**
      * 部门工作日期
@@ -30,7 +35,12 @@ public class DepartmentUpdateDTO {
     private String workingHours;
 
     /**
-     * 部门负责人ID(权限设置)
+     * 部门负责人姓名
+     */
+    private String managerName;
+
+    /**
+     * 部门负责人id
      */
     private Long managerId;
 

@@ -14,7 +14,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IDepartmentService extends IService<Department> {
 
-    Boolean updateDepartment(Long id, DepartmentUpdateDTO departmentUpdateDTO);
+    Boolean updateDepartment(Long id, DepartmentUpdateDTO departmentUpdateDTO,Long employeeId);
 
     void updateDepartmentEmployeeCount(Long departmentId);
 }

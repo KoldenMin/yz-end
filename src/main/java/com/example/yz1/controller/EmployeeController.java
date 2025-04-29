@@ -6,12 +6,15 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.yz1.common.Result;
+import com.example.yz1.dto.EmployeeDTO;
 import com.example.yz1.entity.Department;
 import com.example.yz1.entity.Employee;
 import com.example.yz1.global.GlobalUpload;
+import com.example.yz1.mapper.EmployeeMapper;
 import com.example.yz1.service.IDepartmentService;
 import com.example.yz1.service.IEmployeeService;
 import com.example.yz1.vo.EmployeeVO;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,6 +41,7 @@ public class EmployeeController {
     private final GlobalUpload globalUpload;
     private final IEmployeeService employeeService;
     private final IDepartmentService departmentService;
+    private final EmployeeMapper employeeMapper;
 
 
     /*
@@ -67,7 +71,19 @@ public class EmployeeController {
        新增或修改员工
      */
     @PostMapping("/addOrUpdate")
-    public Result<Void> addOrUpdateEmployee(@RequestBody Employee employee) {
+    public Result<Void> addOrUpdateEmployee(@RequestBody EmployeeDTO employeeDTO) {
+
+        String departmentName = employeeDTO.getDepartmentName();
+        Department department = departmentService.lambdaQuery()
+                .eq(Department::getName, departmentName)
+                .one();
+        Long departmentId = department.getId();
+
+        Employee employee = BeanUtil.copyProperties(employeeDTO, Employee.class);
+
+
+        employee.setDepartmentId(departmentId);
+
         boolean success = employeeService.saveOrUpdate(employee);
         if (success) {
             return Result.success();
@@ -82,7 +98,13 @@ public class EmployeeController {
     @GetMapping("/info/{id}")
     public Result<EmployeeVO> getEmployeeById(@PathVariable("id") Integer id) {
         Employee employee = employeeService.getById(id);
+        Long departmentId = employee.getDepartmentId();
+        Department department = departmentService.lambdaQuery()
+                .eq(Department::getId, departmentId)
+                .one();
+        String departmentName = department.getName();
         EmployeeVO employeeVO = BeanUtil.copyProperties(employee, EmployeeVO.class);
+        employeeVO.setDepartmentName(departmentName);
         return Result.success(employeeVO);
     }
 
@@ -99,18 +121,40 @@ public class EmployeeController {
     }
 
     /*
+       获取所有员工列表
+     */
+    @GetMapping("/list")
+    public Result<List<EmployeeVO>> getAllEmployee() {
+        MPJLambdaWrapper<Employee> wrapper = new MPJLambdaWrapper<Employee>()
+                .selectAll(Employee.class)
+                .selectAs(Department::getName, "departmentName")
+                .leftJoin(Department.class, Department::getId, Employee::getDepartmentId);
+
+        List<EmployeeVO> employeeVOS = employeeMapper.selectJoinList(EmployeeVO.class, wrapper);
+
+        return Result.success(employeeVOS);
+    }
+
+    /*
        分页查询员工
      */
     @GetMapping("/page")
-    public Result<IPage<Employee>> getEmployeePage(@RequestParam(defaultValue = "1") Integer pageNum,
-                                                   @RequestParam(defaultValue = "5") Integer pageSize,
-                                                   @RequestParam(required = false) String name,
-                                                   @RequestParam(required = false) String phone) {
-        Page<Employee> employeePage = employeeService.lambdaQuery()
-                .like(StrUtil.isNotEmpty(name), Employee::getName, name)
-                .like(StrUtil.isNotEmpty(phone), Employee::getPhone, phone)
-                .page(new Page<>(pageNum, pageSize));
-        return Result.success(employeePage);
+    public Result<IPage<EmployeeVO>> getEmployeePage(@RequestParam(defaultValue = "1") Integer pageNum,
+                                                     @RequestParam(defaultValue = "5") Integer pageSize,
+                                                     @RequestParam(required = false) String name,
+                                                     @RequestParam(required = false) String phone) {
+        MPJLambdaWrapper<Employee> wrapper = new MPJLambdaWrapper<Employee>()
+                .selectAll(Employee.class)
+                .selectAs(Department::getName, "departmentName")
+                .leftJoin(Department.class, Department::getId, Employee::getDepartmentId);
+
+        wrapper.like(StrUtil.isNotEmpty(name), Employee::getName, name)
+                .like(StrUtil.isNotEmpty(phone), Employee::getPhone, phone);
+
+        Page<EmployeeVO> employeeVOPage = new Page<>(pageNum, pageSize);
+        Page<EmployeeVO> joinpage = employeeMapper.selectJoinPage(employeeVOPage, EmployeeVO.class, wrapper);
+
+        return Result.success(joinpage);
     }
 
     /*

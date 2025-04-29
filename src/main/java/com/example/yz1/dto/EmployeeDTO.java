@@ -1,29 +1,17 @@
-package com.example.yz1.vo;
+package com.example.yz1.dto;
 
-import com.example.yz1.entity.EducationBackground;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 用户信息视图对象
  */
 @Data
-public class EmployeeVO implements Serializable {
+public class EmployeeDTO {
 
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * 员工ID
-     */
     private Long id;
-    /**
-     * 关联的用户ID
-     */
-    private Long userId;
 
     /**
      * 姓名
@@ -46,10 +34,6 @@ public class EmployeeVO implements Serializable {
      */
     private String phone;
 
-    /**
-     * 头像URL
-     */
-    private String avatar;
 
     /**
      * 当前住址
@@ -63,19 +47,9 @@ public class EmployeeVO implements Serializable {
     private LocalDateTime entryTime;
 
     /**
-     * 简历上传地址
-     */
-    private String resumeUrl;
-
-    /**
      * 职能描述
      */
     private String jobDescription;
-
-    /**
-     * 部门id
-     */
-    private Integer departmentId;
 
     /**
      * 部门名称
@@ -86,15 +60,4 @@ public class EmployeeVO implements Serializable {
      * 角色
      */
     private Integer role;
-
-
-    /**
-     * 教育背景列表
-     */
-    private List<EducationBackground> educationList;
-
-    /**
-     * Token值
-     */
-    private String token;
 }
