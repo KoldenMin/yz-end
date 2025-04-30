@@ -11,7 +11,6 @@ import com.example.yz1.entity.Department;
 import com.example.yz1.entity.Employee;
 import com.example.yz1.mapper.DepartmentMapper;
 import com.example.yz1.service.IDepartmentService;
-import com.example.yz1.service.IEmployeeDepartmentService;
 import com.example.yz1.service.IEmployeeService;
 import com.example.yz1.vo.DepartmentVO;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -36,7 +35,6 @@ public class DepartmentController {
     private final IDepartmentService departmentService;
     private final IEmployeeService employeeService;
     private final DepartmentMapper departmentMapper;
-    private final IEmployeeDepartmentService employeeDepartmentService;
 
     /**
      * 添加部门

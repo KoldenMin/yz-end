@@ -5,8 +5,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.yz1.dto.DepartmentUpdateDTO;
 import com.example.yz1.entity.Department;
 import com.example.yz1.mapper.DepartmentMapper;
-import com.example.yz1.mapper.EmployeeDepartmentMapper;
-import com.example.yz1.mapper.EmployeeMapper;
 import com.example.yz1.service.IDepartmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,9 +23,6 @@ import java.util.List;
 @Service
 public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Department> implements IDepartmentService {
 
-    private final DepartmentMapper departmentMapper;
-    private final EmployeeMapper employeeMapper;
-    private final EmployeeDepartmentMapper employeeDepartmentMapper;
 
     @Override
     public Boolean updateDepartment(Long id, DepartmentUpdateDTO departmentUpdateDTO, Long employeeId) {
