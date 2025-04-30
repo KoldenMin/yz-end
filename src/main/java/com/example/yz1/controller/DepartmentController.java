@@ -67,7 +67,6 @@ public class DepartmentController {
             Boolean success = departmentService.updateDepartment(id, departmentUpdateDTO, employeeId);
             if (success) {
                 // 还要修改employee表的员工状态
-                // todo 这里改部门表的管理员的时候还要重新设置employee表的role字段，不是部门经理了还要把role变成0
                 // 这里设置新的部门经理的role为2
                 employeeService.lambdaUpdate()
                         .eq(Employee::getId, oldManagerId)

@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.LocalDate;
+
 @SpringBootTest
 class Yz1ApplicationTests {
 
@@ -24,6 +26,12 @@ class Yz1ApplicationTests {
 
         Page<User> page = userMapper.selectJoinPage(new Page<User>(1, 5), User.class, wrapper);
         page.getRecords().forEach(System.out::println);
+    }
+
+    @Test
+    void test() {
+        LocalDate now = LocalDate.now();
+        System.out.println(now);
     }
 
 }
