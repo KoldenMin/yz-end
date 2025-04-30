@@ -48,7 +48,9 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
             selectDepartment.setWorkingHours(departmentUpdateDTO.getWorkingHours());
         }
         if (StrUtil.isNotEmpty(departmentUpdateDTO.getManagerName())) {
-            selectDepartment.setManagerId(employeeId);
+            if (employeeId != null) {
+                selectDepartment.setManagerId(employeeId);
+            }
         }
         return updateById(selectDepartment);
     }

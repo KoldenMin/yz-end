@@ -56,6 +56,9 @@ public class DepartmentController {
      */
     @PutMapping("/update/{id}")
     public Result<Void> updateDepartment(@PathVariable Long id, @RequestBody DepartmentUpdateDTO departmentUpdateDTO) {
+        Department department = departmentService.getById(id);
+        Long oldManagerId = department.getManagerId();
+
         String managerName = departmentUpdateDTO.getManagerName();
         if (StrUtil.isNotEmpty(managerName)) {
             // 部门经理不为空
@@ -67,15 +70,21 @@ public class DepartmentController {
             if (success) {
                 // 还要修改employee表的员工状态
                 // todo 这里改部门表的管理员的时候还要重新设置employee表的role字段，不是部门经理了还要把role变成0
+                // 这里设置新的部门经理的role为2
+                employeeService.lambdaUpdate()
+                        .eq(Employee::getId, oldManagerId)
+                        .set(Employee::getRole, 0)
+                        .update();
                 employeeService.lambdaUpdate()
                         .eq(Employee::getId, employeeId)
-                        .set(Employee::getRole, 2)
+                        .set(Employee::getRole, 2)  // 设置新的经理
                         .update();
                 return Result.success();
             } else {
                 return Result.error("更新部门失败");
             }
         } else {
+            // 部门经理为空
             Boolean success = departmentService.updateDepartment(id, departmentUpdateDTO, null);
             if (success) {
                 return Result.success();

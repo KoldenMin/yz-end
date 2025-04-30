@@ -27,7 +27,7 @@ public class WebConfig implements WebMvcConfigurer {
     /**
      * 添加拦截器
      */
-    // todo 暂时关闭拦截, 后面需要打开
+    //
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
