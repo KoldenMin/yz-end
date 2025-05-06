@@ -9,10 +9,14 @@ import com.example.yz1.common.Result;
 import com.example.yz1.dto.EmployeeDTO;
 import com.example.yz1.entity.Department;
 import com.example.yz1.entity.Employee;
+import com.example.yz1.entity.Project;
+import com.example.yz1.entity.ProjectParticipant;
 import com.example.yz1.global.GlobalUpload;
 import com.example.yz1.mapper.EmployeeMapper;
 import com.example.yz1.service.IDepartmentService;
 import com.example.yz1.service.IEmployeeService;
+import com.example.yz1.service.IProjectParticipantService;
+import com.example.yz1.service.IProjectService;
 import com.example.yz1.vo.EmployeeVO;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +46,8 @@ public class EmployeeController {
     private final IEmployeeService employeeService;
     private final IDepartmentService departmentService;
     private final EmployeeMapper employeeMapper;
+    private final IProjectParticipantService projectParticipantService;
+    private final IProjectService projectService;
 
 
     /*
@@ -98,13 +104,31 @@ public class EmployeeController {
     @GetMapping("/info/{id}")
     public Result<EmployeeVO> getEmployeeById(@PathVariable("id") Integer id) {
         Employee employee = employeeService.getById(id);
+        if (employee == null) {
+            return Result.error("员工不存在");
+        }
+        // 查部门
         Long departmentId = employee.getDepartmentId();
         Department department = departmentService.lambdaQuery()
-                .eq(Department::getId, departmentId)
+                .eq(departmentId != null, Department::getId, departmentId)
                 .one();
         String departmentName = department.getName();
+
         EmployeeVO employeeVO = BeanUtil.copyProperties(employee, EmployeeVO.class);
-        employeeVO.setDepartmentName(departmentName);
+        if (departmentName != null && !departmentName.isEmpty()) {
+            employeeVO.setDepartmentName(departmentName);
+        }
+
+        List<ProjectParticipant> projectParticipantList = projectParticipantService.lambdaQuery()
+                .eq(id != null, ProjectParticipant::getEmployeeId, id)
+                .list();
+        if (projectParticipantList != null && !projectParticipantList.isEmpty()) {
+            List<Long> projectIds = projectParticipantList.stream().map(ProjectParticipant::getProjectId).collect(Collectors.toList());
+            List<Project> projectList = projectService.lambdaQuery()
+                    .in(Project::getId, projectIds)
+                    .list();
+            employeeVO.setProjectList(projectList);
+        }
         return Result.success(employeeVO);
     }
 

@@ -4,7 +4,6 @@ package com.example.yz1.controller;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.yz1.common.Result;
@@ -20,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -55,6 +53,13 @@ public class ProjectController {
     @GetMapping("/info/{id}")
     public Result<Project> info(@PathVariable("id") Long id) {
         return Result.success(projectService.getById(id));
+    }
+
+    // 查看所有项目信息
+    @GetMapping("/list")
+    public Result<List<Project>> listAll() {
+        List<Project> list = projectService.list();
+        return Result.success(list);
     }
 
     // 根据id删除项目
@@ -116,19 +121,13 @@ public class ProjectController {
     //更新项目表中的participant_count字段，正确计算每个项目的参与人数（重复参与算一个人）
     @PostMapping("/updateCount")
     public Result<Void> updateCount() {
-        QueryWrapper<ProjectParticipant> wrapper = new QueryWrapper<ProjectParticipant>()
-                .select("project_id", "count(distinct employee_id) as participantCount")
-                .groupBy("project_id");
-        List<Map<String, Object>> maps = projectParticipantMapper.selectMaps(wrapper);
-        for (Map<String, Object> map : maps) {
-            Long projectId = (Long) map.get("project_id");
-            Object participantCount = map.get("participantCount");
-            projectService.lambdaUpdate()
-                    .set(Project::getParticipantCount, participantCount)
-                    .eq(Project::getId, projectId)
-                    .update();
+        boolean success = projectService.updateCount();
+
+        if (success) {
+            return Result.success();
+        } else {
+            return Result.error("参与人员数量更新失败");
         }
-        return Result.success();
     }
 
 

@@ -1,6 +1,7 @@
 package com.example.yz1.vo;
 
 import com.example.yz1.entity.EducationBackground;
+import com.example.yz1.entity.Project;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
@@ -97,4 +98,13 @@ public class EmployeeVO implements Serializable {
      * Token值
      */
     private String token;
+
+    /**
+     * 参与项目列表
+     */
+    private List<Project> projectList;
+
+    private String projectName;
+
+    private String projectDescription;
 }
