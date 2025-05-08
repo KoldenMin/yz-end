@@ -1,12 +1,12 @@
-package com.example.yz1.entity;
+package com.example.yz1.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -19,8 +19,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("project_bug")
-public class ProjectBug implements Serializable {
+public class ProjectBugVO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -35,6 +34,9 @@ public class ProjectBug implements Serializable {
      */
     private Long projectId;
 
+
+    private String projectName;
+
     /**
      * bug标题
      */
@@ -45,6 +47,9 @@ public class ProjectBug implements Serializable {
      */
     private Long testerId;
 
+
+    private String testerName;
+
     /**
      * bug类型
      */
@@ -53,7 +58,6 @@ public class ProjectBug implements Serializable {
     /**
      * 操作系统
      */
-    @TableField("`system`")
     private String system;
 
     /**
@@ -90,19 +94,6 @@ public class ProjectBug implements Serializable {
      * 是否确认
      */
     private Boolean isConfirmed;
-
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updateTime;
-
-    @TableLogic
-    private Integer isDelete;
 
 
 }
