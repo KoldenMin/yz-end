@@ -40,7 +40,18 @@ public class DepartmentController {
      * 添加部门
      */
     @PostMapping("/add")
-    public Result<Void> addDepartment(@RequestBody Department department) {
+    public Result<Void> addDepartment(@RequestBody DepartmentUpdateDTO departmentUpdateDTO) {
+        String managerName = departmentUpdateDTO.getManagerName();
+        Employee employee = employeeService.lambdaQuery()
+                .eq(StrUtil.isNotEmpty(managerName), Employee::getName, managerName)
+                .one();
+        if (employee == null) {
+            return Result.error("所选经理不存在");
+        }
+        Long employeeId = employee.getId();
+        Department department = BeanUtil.copyProperties(departmentUpdateDTO, Department.class);
+        department.setManagerId(employeeId);
+
         boolean success = departmentService.save(department);
         if (success) {
             return Result.success();
